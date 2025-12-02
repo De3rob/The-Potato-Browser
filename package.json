@@ -1,0 +1,14 @@
+{
+  "name": "PotatoBrowser",
+  "version": "1.0.0",
+  "description": "The Potato Browser - A simple, fast web browser",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package-win": "electron-packager . PotatoBrowser --platform=win32 --arch=x64 --icon=potato.ico --overwrite"
+  },
+  "devDependencies": {
+    "electron": "^39.2.3",
+    "electron-packager": "^17.1.2"
+  }
+}

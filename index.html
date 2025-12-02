@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Potato Browser</title>
+<link rel="icon" type="image/png" href="potato.png">
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+#tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  flex: 1 1 auto;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: transparent;
+  margin-right: 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  min-width: 120px;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border: 1px solid #cfcfcf;
+  border-bottom: none;
+}
+.tab.active {
+  background: rgba(255,255,255,0.06);
+  font-weight: 600;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+}
+.tab .title {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+  flex: 1;
+  min-width: 60px;
+}
+.tab .favicon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  background: #888;
+  display: inline-block;
+  margin-right: 8px;
+  flex-shrink: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.tab .close {
+  margin-left: 8px;
+  color: #bbb;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.6;
+  visibility: visible;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 16px;
+}
+.tab .close:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.1);
+}
+#addTab {
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  background: #f1f3f4;
+  flex: 0 0 auto;
+  border-bottom: 1px solid #d0d0d0;
+}
+#topbar { display:flex; align-items:center; gap:12px; padding:8px; background: #202327; color: #ddd; }
+#window-controls { display:flex; align-items:center; gap:8px; margin-right:8px; }
+.nav-btn { background: transparent; border: none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; margin:0 8px 0 0; cursor:pointer; color:#ddd; }
+.nav-btn svg { width:18px; height:18px; fill: currentColor; }
+#toolbar { display:flex; align-items:center; gap:8px; padding:10px 12px; background:#181a1c; }
+#url { flex:1; padding:10px 14px; font-size:14px; border-radius:20px; border:1px solid rgba(255,255,255,0.06); outline:none; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color:#e6e6e6; }
+#go { padding:6px 12px; }
+#go {
+  padding: 6px 12px;
+  margin-left: 8px;
+}
+
+#main { flex:1; display:flex; height: calc(100vh - 110px); }
+#sidebar { width:64px; background:transparent; display:flex; flex-direction:column; align-items:center; padding:12px 8px; gap:12px; }
+.side-icon { width:40px; height:40px; border-radius:20px; background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.2)); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.side-icon.settings { margin-top:auto; margin-bottom:12px; }
+#webview-container { flex:1; display:flex; flex-direction:column; position:relative; background:#141416; }
+.favicon { width:16px; height:16px; border-radius:2px; background:#888; display:inline-block; margin-right:8px; flex:0 0 auto; }
+.tab .title { display:inline-block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; }
+#addTab { width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:18px; background:transparent; border:1px dashed rgba(255,255,255,0.04); }
+
+body, html { background: #0f1112; color: #e6e6e6; }
+
+.modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.modal.hidden { display:none; }
+.modal-content { background:#1a1d1f; border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,0.8); min-width:400px; }
+.modal-header { padding:16px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center; }
+.modal-header h2 { margin:0; color:#e6e6e6; font-size:18px; }
+.close-modal { background:none; border:none; color:#999; font-size:24px; cursor:pointer; }
+.modal-body { padding:20px; }
+.modal-body label { display:block; margin-bottom:8px; color:#bbb; font-size:14px; }
+.modal-body select { width:100%; padding:8px; background:#0f1112; border:1px solid rgba(255,255,255,0.1); border-radius:4px; color:#e6e6e6; }
+.settings-section { margin-bottom:20px; }
+.settings-section.credits { border-top:1px solid rgba(255,255,255,0.1); padding-top:20px; }
+.settings-section h3 { margin:0 0 12px 0; color:#e6e6e6; font-size:14px; }
+.settings-section p { margin:6px 0; color:#bbb; font-size:13px; }
+.modal-footer { padding:16px; border-top:1px solid rgba(255,255,255,0.1); text-align:right; }
+.btn-save { padding:8px 16px; background:#4a90e2; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+
+webview {
+  flex: 1;
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="tabs">
+    <div class="tab active" data-tab="1">
+      <span class="favicon"></span>
+      <span class="title">New Tab</span>
+      <button class="close" data-close="1">×</button>
+    </div>
+    <div id="addTab" class="tab">+</div>
+  </div>
+</div>
+
+<div id="toolbar">
+  <button id="back" class="nav-btn" title="Back" aria-label="Back">
+    <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+  </button>
+  <button id="forward" class="nav-btn" title="Forward" aria-label="Forward">
+    <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" fill="currentColor"/></svg>
+  </button>
+  <button id="reload" class="nav-btn" title="Reload" aria-label="Reload">
+    <svg viewBox="0 0 24 24"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5 0 .34-.03.67-.1 1l1.46 1.46C18.88 15.4 19 14.71 19 14c0-3.87-3.13-7-7-7z" fill="currentColor"/></svg>
+  </button>
+  <button id="home" class="nav-btn" title="Home" aria-label="Home">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor"/></svg>
+  </button>
+  <input type="text" id="url" placeholder="Search or type a URL" />
+  <button id="go">Go</button>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+    <button id="settings-btn" class="side-icon settings" title="Settings">⚙</button>
+  </div>
+
+  <div id="webview-container">
+    <webview id="browser"></webview>
+  </div>
+</div>
+
+<div id="settings-modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-section">
+        <label>Search Engine:</label>
+        <select id="search-engine">
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="brave">Brave</option>
+        </select>
+      </div>
+      <div class="settings-section credits">
+        <h3>About</h3>
+        <p><strong>The Potato Browser</strong></p>
+        <p>Created by <strong>Karthik Kasaraneni</strong></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>
